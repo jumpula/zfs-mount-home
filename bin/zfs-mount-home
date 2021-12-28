@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -eu
+
+ZPATH_HOME='pool/home'
+ZPATH_HOME_USER="${ZPATH_HOME}/${PAM_USER}"
+
+MOUNTED="$(zfs get -H mounted "$ZPATH_HOME_USER" | cut -f 3)"
+if [ "${MOUNTED:-no}" != 'no' ] ; then
+	exit 0
+fi
+
+KEYAVAIL="$(zfs get -H keystatus "$ZPATH_HOME_USER")"
+if [ "${KEYAVAIL:-unavailable}" != 'unavailable' ] ; then
+	cat - | zfs load-key "$ZPATH_HOME_USER" || true
+fi
+
+zfs mount "$ZPATH_HOME_USER" || true

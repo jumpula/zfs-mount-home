@@ -1,0 +1,6 @@
+Name: Mount userhome on an encrypted ZFS
+Default: no
+Priority: 0
+Auth-Type: Additional
+Auth:
+	optional			pam_exec.so expose_authtok /usr/local/sbin/zfs-mount-home
