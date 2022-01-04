@@ -12,6 +12,9 @@ Note that the file system is not unmounted when last user process has
 terminated. Once the file system has been mounted, data is accessible
 to anyone with sufficient permissions.
 
+Also note that if user's password is forgotten, user's home cannot be
+decrypted.
+
 ### Installation
 
 On a Debian system, do the following:
@@ -25,3 +28,15 @@ On a Debian system, do the following:
 
     # configure pam to enable zfs-mount-home
     % sudo pam-auth-config
+
+### Creating a dataset for user's home
+
+Create a dataset for user as follows:
+
+    # Use the same password as you do for user authentication
+    % zfs create \
+        -o encryption=aes-256-gcm \
+        -o keyformat=passphrase \
+        -o keylocation=prompt \
+        -o canmount=noauto \
+        pool/path/to/home/$USER
