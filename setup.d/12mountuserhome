@@ -1,0 +1,68 @@
+#!/bin/sh
+
+# includes won't handle -u
+set -e
+
+. "${SETUP_DATA_DIR}/common-data"
+. "${SETUP_DATA_DIR}/common-functions"
+. "${SETUP_DATA_DIR}/common-config"
+
+run_cmd()
+{
+	info "$*"
+	"$@"
+}
+
+run_mount()
+{
+	local src dst
+	src="$1"
+	dst="$2"
+	shift 2
+
+	local vflag
+	if [ "$VERBOSE" = 'verbose' ] ; then
+		vflag='-v'
+	fi
+
+	if [ -L "$dst" ] ; then
+		fatal "'${dst}': refusing to mount on top of a symbolic link"
+	else
+		if [ -e "$dst" ] ; then
+			if [ ! -d "$dst" ] ; then
+				fatal "'${dst}': refusing to mount on top of a non-directory"
+			fi
+		else
+			mkdir -p "$dst"
+			if [ ! -d "$dst" ] ; then
+				fatal "'${dst}': unable to create a mountpoint"
+			fi
+		fi
+	fi
+
+	run_cmd mount ${vflag:-} "$@" "$src" "$dst"
+
+	# systemd based systems have shared mountpoints
+	if [ -d '/run/systemd/system' ] ; then
+		run_cmd mount ${vflag:-} --make-private "$dst"
+	fi
+}
+
+same_fs()
+{
+	[ "$(stat -c '%d' "$1")" = "$(stat -c '%d' "$2")" ]
+}
+
+# assume umounts will be handled by 10mount
+if [ "$STAGE" = "setup-start" ] || [ "$STAGE" = "setup-recover" ] ; then
+	HOME_ROOT="$(dirname "$AUTH_HOME")"
+	if [ "$HOME_ROOT" != '/' ] ; then
+		if ! same_fs "$AUTH_HOME" "$HOME_ROOT" ; then
+			info "Mounting '${AUTH_HOME}' inside chroot"
+			run_mount \
+			    "$AUTH_HOME" \
+			    "${CHROOT_PATH}/${AUTH_HOME}" \
+			    -o bind
+		fi
+	fi
+fi

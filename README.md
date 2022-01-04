@@ -26,6 +26,9 @@ On a Debian system, do the following:
     % sudo cp bin/zfs-mount-home /usr/local/sbin
     % sudo cp share/zfs-mount-home /usr/share/pam-configs
 
+    # if you use schroot
+    % sudo cp setup.d/12mountuserhome /etc/schroot/setup.d
+
     # configure pam to enable zfs-mount-home
     % sudo pam-auth-config
 
