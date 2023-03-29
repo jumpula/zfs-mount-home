@@ -2,6 +2,10 @@
 
 set -eu
 
+if [ "${PAM_USER:-root}" = 'root' ] ; then
+	exit 0
+fi
+
 ZPATH_HOME='pool/home'
 ZPATH_HOME_USER="${ZPATH_HOME}/${PAM_USER}"
 
